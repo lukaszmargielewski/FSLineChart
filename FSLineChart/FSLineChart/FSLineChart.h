@@ -28,6 +28,8 @@ typedef NSString *(^FSLabelForIndexGetter)(NSUInteger index);
 
 // Same as above, but for the value (for adding a currency, or a unit symbol for example)
 typedef NSString *(^FSLabelForValueGetter)(CGFloat value);
+// Same as above, but for the value (for adding a currency, or a unit symbol for example)
+typedef UIImage *(^FSIconForValueGetter)(CGFloat value);
 
 typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
     ValueLabelLeft,
@@ -42,10 +44,13 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 @property (nonatomic) UIColor* indexLabelBackgroundColor;
 
 // Value label properties
-@property (copy) FSLabelForValueGetter labelForValue;
+@property (copy) FSLabelForValueGetter  labelForValue;
+@property (copy) FSIconForValueGetter   iconForValue;
+
 @property (nonatomic, strong) UIFont* valueLabelFont;
 @property (nonatomic) UIColor* valueLabelTextColor;
 @property (nonatomic) UIColor* valueLabelBackgroundColor;
+@property (nonatomic) UIColor* valueIconBackgroundColor;
 @property (nonatomic) ValueLabelPositionType valueLabelPosition;
 
 // Number of visible step in the chart

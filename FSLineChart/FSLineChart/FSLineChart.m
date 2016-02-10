@@ -151,6 +151,16 @@
         }
     }
     
+    if(_iconForValue) {
+        for(int i=0;i<_verticalGridStep;i++) {
+            UIImageView* iconView = [self createIconForValue:i];
+            
+            if(iconView) {
+                [self addSubview:iconView];
+            }
+        }
+    }
+    
     if(_labelForIndex) {
         for(int i=0;i<_horizontalGridStep + 1;i++) {
             UILabel* label = [self createLabelForIndex:i];
@@ -212,6 +222,41 @@
     label.backgroundColor = _valueLabelBackgroundColor;
     
     return label;
+}
+
+- (UIImageView*)createIconForValue: (NSUInteger)index
+{
+    CGFloat minBound = [self minVerticalBound];
+    CGFloat maxBound = [self maxVerticalBound];
+    
+    CGPoint p = CGPointMake(_margin + (_valueLabelPosition == ValueLabelRight ? _axisWidth : 0), _axisHeight + _margin - (index + 1) * _axisHeight / _verticalGridStep);
+    
+    UIImage* icon = _iconForValue(minBound + (maxBound - minBound) / _verticalGridStep * (index + 1));
+    
+    if(!icon)
+    {
+        return nil;
+    }
+    
+    CGRect rect = CGRectMake(_margin, p.y + 2, self.frame.size.width - _margin * 2 - 4.0f, 14);
+    
+    CGFloat width = icon.size.width;
+    CGFloat height = icon.size.height;
+    
+    CGFloat xPadding = 6;
+    CGFloat xOffset = width + xPadding;
+    
+    if (_valueLabelPosition == ValueLabelLeftMirrored) {
+        xOffset = -xPadding;
+    }
+    
+    UIImageView* iconView = [[UIImageView alloc] initWithFrame:CGRectMake(p.x - xOffset, p.y + 2, width + 2, height + 2)];
+    iconView.clipsToBounds = NO;
+    iconView.contentMode = UIViewContentModeCenter;
+    iconView.image = icon;
+    iconView.backgroundColor = _valueIconBackgroundColor;
+    
+    return iconView;
 }
 
 - (UILabel*)createLabelForIndex: (NSUInteger)index
