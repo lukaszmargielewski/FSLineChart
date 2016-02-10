@@ -23,9 +23,57 @@
 #import "FSLineChart.h"
 #import "UIColor+FSPalette.h"
 
-@interface FSLineChart ()
+@interface FSLinePlot()
+@property (nonatomic, strong) NSMutableArray *data;
+@end
 
-@property (nonatomic, strong) NSMutableArray* data;
+@implementation FSLinePlot{
+
+}
+
+#pragma mark - Initialisation
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        [self commonInit];
+    }
+    return self;
+}
+
+- (void)commonInit
+{
+    [self setDefaultParameters];
+}
+- (void)setDefaultParameters
+{
+    _color = [UIColor fsLightBlue];
+    _fillColor = [_color colorWithAlphaComponent:0.25];
+    _bezierSmoothing = YES;
+    _bezierSmoothingTension = 0.2;
+    _lineWidth = 1;
+    _displayDataPoint = NO;
+    _dataPointRadius = 1;
+    _dataPointColor = _color;
+    _dataPointBackgroundColor = _color;
+    
+}
+
+- (void)setChartData:(NSArray *)chartData
+{
+    if (chartData == nil || chartData.count == 0) {
+        return;
+    }
+    
+    _data = [NSMutableArray arrayWithArray:chartData];
+}
+
+@end
+
+
+@interface FSLineChart ()
+@property (nonatomic, strong) NSMutableArray* plots;
 @property (nonatomic, strong) NSMutableArray* layers;
 
 @property (nonatomic) CGFloat min;
@@ -35,7 +83,10 @@
 
 @end
 
-@implementation FSLineChart
+@implementation FSLineChart{
+
+    NSInteger _maxCount;
+}
 
 #pragma mark - Initialisation
 
@@ -65,14 +116,13 @@
 - (void)commonInit
 {
     _layers = [NSMutableArray array];
+    _plots = [NSMutableArray array];
     self.backgroundColor = [UIColor whiteColor];
     [self setDefaultParameters];
 }
 
 - (void)setDefaultParameters
 {
-    _color = [UIColor fsLightBlue];
-    _fillColor = [_color colorWithAlphaComponent:0.25];
     _verticalGridStep = 3;
     _horizontalGridStep = 3;
     _margin = 5.0f;
@@ -81,17 +131,9 @@
     _axisColor = [UIColor colorWithWhite:0.7 alpha:1.0];
     _innerGridColor = [UIColor colorWithWhite:0.9 alpha:1.0];
     _drawInnerGrid = YES;
-    _bezierSmoothing = YES;
-    _bezierSmoothingTension = 0.2;
-    _lineWidth = 1;
     _innerGridLineWidth = 0.5;
     _axisLineWidth = 1;
     _animationDuration = 0.5;
-    _displayDataPoint = NO;
-    _dataPointRadius = 1;
-    _dataPointColor = _color;
-    _dataPointBackgroundColor = _color;
-    
     // Labels attributes
     _indexLabelBackgroundColor = [UIColor clearColor];
     _indexLabelTextColor = [UIColor grayColor];
@@ -121,10 +163,19 @@
     [self layoutChart];
     [super layoutSubviews];
 }
+- (void)addPlot:(FSLinePlot *)plot{
 
+    [self.plots addObject:plot];
+}
+- (void)clearAllPlots{
+
+    [self.plots removeAllObjects];
+    [self layoutChart];
+}
 - (void)layoutChart
 {
-    if(_data == nil) {
+    [self clearChartData];
+    if(self.plots == nil || self.plots.count < 1) {
         return;
     }
     
@@ -137,8 +188,12 @@
     
     [self strokeChart];
     
-    if(_displayDataPoint) {
-        [self strokeDataPoints];
+    for (FSLinePlot *plot in self.plots) {
+
+        if(plot.displayDataPoint) {
+            [self strokeDataPointsForPlot:plot];
+        }
+
     }
     
     if(_labelForValue) {
@@ -172,16 +227,6 @@
     }
     
     [self setNeedsDisplay];
-}
-
-- (void)setChartData:(NSArray *)chartData
-{
-    if (chartData == nil || chartData.count == 0) {
-        return;
-    }
-    
-    _data = [NSMutableArray arrayWithArray:chartData];
-    [self layoutChart];
 }
 
 #pragma mark - Labels creation
@@ -238,8 +283,6 @@
         return nil;
     }
     
-    CGRect rect = CGRectMake(_margin, p.y + 2, self.frame.size.width - _margin * 2 - 4.0f, 14);
-    
     CGFloat width = icon.size.width;
     CGFloat height = icon.size.height;
     
@@ -262,12 +305,12 @@
 - (UILabel*)createLabelForIndex: (NSUInteger)index
 {
     CGFloat scale = [self horizontalScale];
-    NSInteger q = (int)_data.count / _horizontalGridStep;
+    NSInteger q = (int)_maxCount / _horizontalGridStep;
     NSInteger itemIndex = q * index;
     
-    if(itemIndex >= _data.count)
+    if(itemIndex >= _maxCount)
     {
-        itemIndex = _data.count - 1;
+        itemIndex = _maxCount - 1;
     }
     
     NSString* text = _labelForIndex(itemIndex);
@@ -299,7 +342,7 @@
 
 - (void)drawRect:(CGRect)rect
 {
-    if (_data.count > 0) {
+    if (self.plots.count > 0) {
         [self drawGrid];
     }
 }
@@ -380,65 +423,70 @@
         scale = _axisHeight / spread;
     }
     
-    UIBezierPath *noPath = [self getLinePath:0 withSmoothing:_bezierSmoothing close:NO];
-    UIBezierPath *path = [self getLinePath:scale withSmoothing:_bezierSmoothing close:NO];
-    
-    UIBezierPath *noFill = [self getLinePath:0 withSmoothing:_bezierSmoothing close:YES];
-    UIBezierPath *fill = [self getLinePath:scale withSmoothing:_bezierSmoothing close:YES];
-    
-    if(_fillColor) {
-        CAShapeLayer* fillLayer = [CAShapeLayer layer];
-        fillLayer.frame = CGRectMake(self.bounds.origin.x, self.bounds.origin.y + minBound * scale, self.bounds.size.width, self.bounds.size.height);
-        fillLayer.bounds = self.bounds;
-        fillLayer.path = fill.CGPath;
-        fillLayer.strokeColor = nil;
-        fillLayer.fillColor = _fillColor.CGColor;
-        fillLayer.lineWidth = 0;
-        fillLayer.lineJoin = kCALineJoinRound;
+    for (FSLinePlot *plot in self.plots) {
         
-        [self.layer addSublayer:fillLayer];
-        [self.layers addObject:fillLayer];
+        BOOL smoothing = plot.bezierSmoothing;
         
-        CABasicAnimation *fillAnimation = [CABasicAnimation animationWithKeyPath:@"path"];
-        fillAnimation.duration = _animationDuration;
-        fillAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-        fillAnimation.fillMode = kCAFillModeForwards;
-        fillAnimation.fromValue = (id)noFill.CGPath;
-        fillAnimation.toValue = (id)fill.CGPath;
-        [fillLayer addAnimation:fillAnimation forKey:@"path"];
+        UIBezierPath *noPath = [self plot:plot getLinePath:0 withSmoothing:smoothing close:NO];
+        UIBezierPath *path = [self plot:plot getLinePath:scale withSmoothing:smoothing close:NO];
+        
+        UIBezierPath *noFill = [self plot:plot getLinePath:0 withSmoothing:smoothing close:YES];
+        UIBezierPath *fill = [self plot:plot getLinePath:scale withSmoothing:smoothing close:YES];
+        
+        if(plot.fillColor) {
+            CAShapeLayer* fillLayer = [CAShapeLayer layer];
+            fillLayer.frame = CGRectMake(self.bounds.origin.x, self.bounds.origin.y + minBound * scale, self.bounds.size.width, self.bounds.size.height);
+            fillLayer.bounds = self.bounds;
+            fillLayer.path = fill.CGPath;
+            fillLayer.strokeColor = nil;
+            fillLayer.fillColor = plot.fillColor.CGColor;
+            fillLayer.lineWidth = 0;
+            fillLayer.lineJoin = kCALineJoinRound;
+            
+            [self.layer addSublayer:fillLayer];
+            [self.layers addObject:fillLayer];
+            
+            CABasicAnimation *fillAnimation = [CABasicAnimation animationWithKeyPath:@"path"];
+            fillAnimation.duration = _animationDuration;
+            fillAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+            fillAnimation.fillMode = kCAFillModeForwards;
+            fillAnimation.fromValue = (id)noFill.CGPath;
+            fillAnimation.toValue = (id)fill.CGPath;
+            [fillLayer addAnimation:fillAnimation forKey:@"path"];
+        }
+        
+        CAShapeLayer *pathLayer = [CAShapeLayer layer];
+        pathLayer.frame = CGRectMake(self.bounds.origin.x, self.bounds.origin.y + minBound * scale, self.bounds.size.width, self.bounds.size.height);
+        pathLayer.bounds = self.bounds;
+        pathLayer.path = path.CGPath;
+        pathLayer.strokeColor = [plot.color CGColor];
+        pathLayer.fillColor = nil;
+        pathLayer.lineWidth = plot.lineWidth;
+        pathLayer.lineJoin = kCALineJoinRound;
+        
+        [self.layer addSublayer:pathLayer];
+        [self.layers addObject:pathLayer];
+        
+        if(plot.fillColor) {
+            CABasicAnimation *pathAnimation = [CABasicAnimation animationWithKeyPath:@"path"];
+            pathAnimation.duration = _animationDuration;
+            pathAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+            pathAnimation.fromValue = (__bridge id)(noPath.CGPath);
+            pathAnimation.toValue = (__bridge id)(path.CGPath);
+            [pathLayer addAnimation:pathAnimation forKey:@"path"];
+        } else {
+            CABasicAnimation *pathAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
+            pathAnimation.duration = _animationDuration;
+            pathAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+            pathAnimation.fromValue = [NSNumber numberWithFloat:0.0f];
+            pathAnimation.toValue = [NSNumber numberWithFloat:1.0f];
+            [pathLayer addAnimation:pathAnimation forKey:@"path"];
+        }
+
     }
-    
-    CAShapeLayer *pathLayer = [CAShapeLayer layer];
-    pathLayer.frame = CGRectMake(self.bounds.origin.x, self.bounds.origin.y + minBound * scale, self.bounds.size.width, self.bounds.size.height);
-    pathLayer.bounds = self.bounds;
-    pathLayer.path = path.CGPath;
-    pathLayer.strokeColor = [_color CGColor];
-    pathLayer.fillColor = nil;
-    pathLayer.lineWidth = _lineWidth;
-    pathLayer.lineJoin = kCALineJoinRound;
-    
-    [self.layer addSublayer:pathLayer];
-    [self.layers addObject:pathLayer];
-    
-    if(_fillColor) {
-        CABasicAnimation *pathAnimation = [CABasicAnimation animationWithKeyPath:@"path"];
-        pathAnimation.duration = _animationDuration;
-        pathAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-        pathAnimation.fromValue = (__bridge id)(noPath.CGPath);
-        pathAnimation.toValue = (__bridge id)(path.CGPath);
-        [pathLayer addAnimation:pathAnimation forKey:@"path"];
-    } else {
-        CABasicAnimation *pathAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
-        pathAnimation.duration = _animationDuration;
-        pathAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-        pathAnimation.fromValue = [NSNumber numberWithFloat:0.0f];
-        pathAnimation.toValue = [NSNumber numberWithFloat:1.0f];
-        [pathLayer addAnimation:pathAnimation forKey:@"path"];
-    }
-    
 }
 
-- (void)strokeDataPoints
+- (void)strokeDataPointsForPlot:(FSLinePlot *)plot
 {
     CGFloat minBound = [self minVerticalBound];
     CGFloat maxBound = [self maxVerticalBound];
@@ -449,18 +497,18 @@
         scale = _axisHeight / spread;
     }
     
-    for(int i=0;i<_data.count;i++) {
-        CGPoint p = [self getPointForIndex:i withScale:scale];
+    for(int i=0;i<plot.data.count;i++) {
+        CGPoint p = [self plot:plot getPointForIndex:i withScale:scale];
         p.y +=  minBound * scale;
         
-        UIBezierPath* circle = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(p.x - _dataPointRadius, p.y - _dataPointRadius, _dataPointRadius * 2, _dataPointRadius * 2)];
+        UIBezierPath* circle = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(p.x - plot.dataPointRadius, p.y - plot.dataPointRadius, plot.dataPointRadius * 2, plot.dataPointRadius * 2)];
         
         CAShapeLayer *fillLayer = [CAShapeLayer layer];
-        fillLayer.frame = CGRectMake(p.x, p.y, _dataPointRadius, _dataPointRadius);
-        fillLayer.bounds = CGRectMake(p.x, p.y, _dataPointRadius, _dataPointRadius);
+        fillLayer.frame = CGRectMake(p.x, p.y, plot.dataPointRadius, plot.dataPointRadius);
+        fillLayer.bounds = CGRectMake(p.x, p.y, plot.dataPointRadius, plot.dataPointRadius);
         fillLayer.path = circle.CGPath;
-        fillLayer.strokeColor = _dataPointColor.CGColor;
-        fillLayer.fillColor = _dataPointBackgroundColor.CGColor;
+        fillLayer.strokeColor = plot.dataPointColor.CGColor;
+        fillLayer.fillColor = plot.dataPointBackgroundColor.CGColor;
         fillLayer.lineWidth = 1;
         fillLayer.lineJoin = kCALineJoinRound;
         
@@ -474,10 +522,15 @@
 - (CGFloat)horizontalScale
 {
     CGFloat scale = 1.0f;
-    NSInteger q = (int)_data.count / _horizontalGridStep;
+    _maxCount = 0;
     
-    if(_data.count > 1) {
-        scale = (CGFloat)(q * _horizontalGridStep) / (CGFloat)(_data.count - 1);
+    for (FSLinePlot *plot in self.plots) {
+        _maxCount = MAX(_maxCount, plot.data.count);
+    }
+    NSInteger q = (int)_maxCount / _horizontalGridStep;
+    
+    if(_maxCount > 1) {
+        scale = (CGFloat)(q * _horizontalGridStep) / (CGFloat)(_maxCount - 1);
     }
     
     return scale;
@@ -497,14 +550,20 @@
 {
     _min = MAXFLOAT;
     _max = -MAXFLOAT;
-    
-    for(int i=0;i<_data.count;i++) {
-        NSNumber* number = _data[i];
-        if([number floatValue] < _min)
-            _min = [number floatValue];
+  
+    for (FSLinePlot *plot in self.plots) {
+
+        NSArray *data = plot.data;
         
-        if([number floatValue] > _max)
-            _max = [number floatValue];
+        for(int i=0;i<data.count;i++) {
+            NSNumber* number = data[i];
+            if([number floatValue] < _min)
+                _min = [number floatValue];
+            
+            if([number floatValue] > _max)
+                _max = [number floatValue];
+        }
+
     }
     
     // The idea is to adjust the minimun and the maximum value to display the whole chart in the view, and if possible with nice "round" steps.
@@ -586,30 +645,30 @@
     _horizontalGridStep = gridStep;
 }
 
-- (CGPoint)getPointForIndex:(NSUInteger)idx withScale:(CGFloat)scale
+- (CGPoint)plot:(FSLinePlot *)plot getPointForIndex:(NSUInteger)idx withScale:(CGFloat)scale
 {
-    if(idx >= _data.count) {
+    if(idx >= plot.data.count) {
         return CGPointZero;
     }
     
     // Compute the point position in the view from the data with a set scale value
-    NSNumber* number = _data[idx];
+    NSNumber* number = plot.data[idx];
     
-    if(_data.count < 2) {
+    if(plot.data.count < 2) {
         return CGPointMake(_margin, _axisHeight + _margin - [number floatValue] * scale);
     } else {
-        return CGPointMake(_margin + idx * (_axisWidth / (_data.count - 1)), _axisHeight + _margin - [number floatValue] * scale);
+        return CGPointMake(_margin + idx * (_axisWidth / (plot.data.count - 1)), _axisHeight + _margin - [number floatValue] * scale);
     }
 }
 
-- (UIBezierPath*)getLinePath:(float)scale withSmoothing:(BOOL)smoothed close:(BOOL)closed
+- (UIBezierPath*)plot:(FSLinePlot *)plot getLinePath:(float)scale withSmoothing:(BOOL)smoothed close:(BOOL)closed
 {
     UIBezierPath* path = [UIBezierPath bezierPath];
     
     if(smoothed) {
-        for(int i=0;i<_data.count - 1;i++) {
+        for(int i=0;i<plot.data.count - 1;i++) {
             CGPoint controlPoint[2];
-            CGPoint p = [self getPointForIndex:i withScale:scale];
+            CGPoint p = [self plot:plot getPointForIndex:i withScale:scale];
             
             // Start the path drawing
             if(i == 0)
@@ -618,8 +677,8 @@
             CGPoint nextPoint, previousPoint, m;
             
             // First control point
-            nextPoint = [self getPointForIndex:i + 1 withScale:scale];
-            previousPoint = [self getPointForIndex:i - 1 withScale:scale];
+            nextPoint = [self plot:plot getPointForIndex:i + 1 withScale:scale];
+            previousPoint = [self plot:plot getPointForIndex:i - 1 withScale:scale];
             m = CGPointZero;
             
             if(i > 0) {
@@ -630,16 +689,16 @@
                 m.y = (nextPoint.y - p.y) / 2;
             }
             
-            controlPoint[0].x = p.x + m.x * _bezierSmoothingTension;
-            controlPoint[0].y = p.y + m.y * _bezierSmoothingTension;
+            controlPoint[0].x = p.x + m.x * plot.bezierSmoothingTension;
+            controlPoint[0].y = p.y + m.y * plot.bezierSmoothingTension;
             
             // Second control point
-            nextPoint = [self getPointForIndex:i + 2 withScale:scale];
-            previousPoint = [self getPointForIndex:i withScale:scale];
-            p = [self getPointForIndex:i + 1 withScale:scale];
+            nextPoint = [self plot:plot getPointForIndex:i + 2 withScale:scale];
+            previousPoint = [self plot:plot getPointForIndex:i withScale:scale];
+            p = [self plot:plot getPointForIndex:i + 1 withScale:scale];
             m = CGPointZero;
             
-            if(i < _data.count - 2) {
+            if(i < plot.data.count - 2) {
                 m.x = (nextPoint.x - previousPoint.x) / 2;
                 m.y = (nextPoint.y - previousPoint.y) / 2;
             } else {
@@ -647,33 +706,30 @@
                 m.y = (p.y - previousPoint.y) / 2;
             }
             
-            controlPoint[1].x = p.x - m.x * _bezierSmoothingTension;
-            controlPoint[1].y = p.y - m.y * _bezierSmoothingTension;
+            controlPoint[1].x = p.x - m.x * plot.bezierSmoothingTension;
+            controlPoint[1].y = p.y - m.y * plot.bezierSmoothingTension;
             
             [path addCurveToPoint:p controlPoint1:controlPoint[0] controlPoint2:controlPoint[1]];
         }
         
     } else {
-        for(int i=0;i<_data.count;i++) {
+        for(int i=0;i<plot.data.count;i++) {
             if(i > 0) {
-                [path addLineToPoint:[self getPointForIndex:i withScale:scale]];
+                [path addLineToPoint:[self plot:plot getPointForIndex:i withScale:scale]];
             } else {
-                [path moveToPoint:[self getPointForIndex:i withScale:scale]];
+                [path moveToPoint:[self plot:plot getPointForIndex:i withScale:scale]];
             }
         }
     }
     
     if(closed) {
         // Closing the path for the fill drawing
-        [path addLineToPoint:[self getPointForIndex:_data.count - 1 withScale:scale]];
-        [path addLineToPoint:[self getPointForIndex:_data.count - 1 withScale:0]];
-        [path addLineToPoint:[self getPointForIndex:0 withScale:0]];
-        [path addLineToPoint:[self getPointForIndex:0 withScale:scale]];
+        [path addLineToPoint:[self plot:plot getPointForIndex:plot.data.count - 1 withScale:scale]];
+        [path addLineToPoint:[self plot:plot getPointForIndex:plot.data.count - 1 withScale:0]];
+        [path addLineToPoint:[self plot:plot getPointForIndex:0 withScale:0]];
+        [path addLineToPoint:[self plot:plot getPointForIndex:0 withScale:scale]];
     }
     
     return path;
 }
-
-
-
 @end

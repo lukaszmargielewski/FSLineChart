@@ -21,6 +21,28 @@
 
 #import <UIKit/UIKit.h>
 
+@interface FSLinePlot : NSObject
+
+@property (nonatomic, strong) NSString* name;
+// Chart parameters
+@property (nonatomic, strong) UIColor* color;
+@property (nonatomic, strong) UIColor* fillColor;
+@property (nonatomic) CGFloat lineWidth;
+
+// Data points
+@property (nonatomic) BOOL displayDataPoint;
+@property (nonatomic, strong) UIColor* dataPointColor;
+@property (nonatomic, strong) UIColor* dataPointBackgroundColor;
+@property (nonatomic) CGFloat dataPointRadius;
+
+// Smoothing
+@property (nonatomic) BOOL bezierSmoothing;
+@property (nonatomic) CGFloat bezierSmoothingTension;
+
+- (void)setChartData:(NSArray *)data;
+@end
+
+
 @interface FSLineChart : UIView
 
 // Block definition for getting a label for a set index (use case: date, units,...)
@@ -68,34 +90,21 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 @property (nonatomic, strong) UIColor* axisColor;
 @property (nonatomic) CGFloat axisLineWidth;
 
-// Chart parameters
-@property (nonatomic, strong) UIColor* color;
-@property (nonatomic, strong) UIColor* fillColor;
-@property (nonatomic) CGFloat lineWidth;
-
-// Data points
-@property (nonatomic) BOOL displayDataPoint;
-@property (nonatomic, strong) UIColor* dataPointColor;
-@property (nonatomic, strong) UIColor* dataPointBackgroundColor;
-@property (nonatomic) CGFloat dataPointRadius;
-
 // Grid parameters
 @property (nonatomic) BOOL drawInnerGrid;
 @property (nonatomic, strong) UIColor* innerGridColor;
 @property (nonatomic) CGFloat innerGridLineWidth;
 
-// Smoothing
-@property (nonatomic) BOOL bezierSmoothing;
-@property (nonatomic) CGFloat bezierSmoothingTension;
-
 // Animations
 @property (nonatomic) CGFloat animationDuration;
 
 // Set the actual data for the chart, and then render it to the view.
-- (void)setChartData:(NSArray *)chartData;
+- (void)addPlot:(FSLinePlot *)plot;
 
 // Clear all rendered data from the view.
-- (void)clearChartData;
+- (void)clearAllPlots;
+
+- (void)layoutChart;
 
 // Get the bounds of the chart
 - (CGFloat)minVerticalBound;
