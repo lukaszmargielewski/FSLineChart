@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import "FSPointData.h"
 
 @interface FSLinePlot : NSObject
 
@@ -27,8 +27,6 @@
 @property (nonatomic) BOOL bezierSmoothing;
 @property (nonatomic) CGFloat bezierSmoothingTension;
 
-@property (nonatomic, strong, readonly) NSArray *data;
-
-- (void)setChartData:(NSArray *)data;
+@property (nonatomic, strong, readwrite) FSPointData *data;
 
 @end

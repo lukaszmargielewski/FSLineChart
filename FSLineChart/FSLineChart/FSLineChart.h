@@ -61,10 +61,8 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 @property (nonatomic) int horizontalGridStep;
 
 // Margin of the chart
-@property (nonatomic) CGFloat margin;
-
-@property (nonatomic) CGFloat axisWidth;
-@property (nonatomic) CGFloat axisHeight;
+@property (nonatomic) UIEdgeInsets margin;
+@property (nonatomic) CGRect visibleRegion;
 
 // Decoration parameters, let you pick the color of the line as well as the color of the axis
 @property (nonatomic, strong) UIColor* axisColor;
@@ -75,11 +73,6 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 @property (nonatomic, strong) UIColor* innerGridColor;
 @property (nonatomic) CGFloat innerGridLineWidth;
 
-
-// Automitacally adjust bounds:
-@property (nonatomic) BOOL automaticallyAdjustBounds;
-@property (nonatomic) CGFloat min;
-@property (nonatomic) CGFloat max;
 // Animations
 @property (nonatomic) CGFloat animationDuration;
 
@@ -89,7 +82,7 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 // Clear all rendered data from the view.
 - (void)clearAllPlots;
 
-- (void)layoutChart;
+- (void)repositionPlots;
 
 // Get the bounds of the chart
 - (CGFloat)minVerticalBound;

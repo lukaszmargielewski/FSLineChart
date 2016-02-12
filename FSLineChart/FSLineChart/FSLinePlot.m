@@ -9,7 +9,6 @@
 #import "FSLinePlot.h"
 
 @interface FSLinePlot()
-@property (nonatomic, strong, readwrite) NSArray *data;
 @end
 
 @implementation FSLinePlot{
@@ -44,14 +43,4 @@
     _dataPointBackgroundColor = _color;
     
 }
-
-- (void)setChartData:(NSArray *)chartData
-{
-    if (chartData == nil || chartData.count == 0) {
-        return;
-    }
-    
-    _data = chartData;
-}
-
 @end
