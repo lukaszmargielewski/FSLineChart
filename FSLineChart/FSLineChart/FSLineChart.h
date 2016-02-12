@@ -20,27 +20,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
-@interface FSLinePlot : NSObject
-
-@property (nonatomic, strong) NSString* name;
-// Chart parameters
-@property (nonatomic, strong) UIColor* color;
-@property (nonatomic, strong) UIColor* fillColor;
-@property (nonatomic) CGFloat lineWidth;
-
-// Data points
-@property (nonatomic) BOOL displayDataPoint;
-@property (nonatomic, strong) UIColor* dataPointColor;
-@property (nonatomic, strong) UIColor* dataPointBackgroundColor;
-@property (nonatomic) CGFloat dataPointRadius;
-
-// Smoothing
-@property (nonatomic) BOOL bezierSmoothing;
-@property (nonatomic) CGFloat bezierSmoothingTension;
-
-- (void)setChartData:(NSArray *)data;
-@end
+#import "FSLinePlot.h"
 
 
 @interface FSLineChart : UIView
@@ -95,6 +75,11 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 @property (nonatomic, strong) UIColor* innerGridColor;
 @property (nonatomic) CGFloat innerGridLineWidth;
 
+
+// Automitacally adjust bounds:
+@property (nonatomic) BOOL automaticallyAdjustBounds;
+@property (nonatomic) CGFloat min;
+@property (nonatomic) CGFloat max;
 // Animations
 @property (nonatomic) CGFloat animationDuration;
 

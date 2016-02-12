@@ -21,63 +21,11 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import "FSLineChart.h"
-#import "UIColor+FSPalette.h"
-
-@interface FSLinePlot()
-@property (nonatomic, strong) NSMutableArray *data;
-@end
-
-@implementation FSLinePlot{
-
-}
-
-#pragma mark - Initialisation
-
-- (id)init
-{
-    self = [super init];
-    if (self) {
-        [self commonInit];
-    }
-    return self;
-}
-
-- (void)commonInit
-{
-    [self setDefaultParameters];
-}
-- (void)setDefaultParameters
-{
-    _color = [UIColor fsLightBlue];
-    _fillColor = [_color colorWithAlphaComponent:0.25];
-    _bezierSmoothing = YES;
-    _bezierSmoothingTension = 0.2;
-    _lineWidth = 1;
-    _displayDataPoint = NO;
-    _dataPointRadius = 1;
-    _dataPointColor = _color;
-    _dataPointBackgroundColor = _color;
-    
-}
-
-- (void)setChartData:(NSArray *)chartData
-{
-    if (chartData == nil || chartData.count == 0) {
-        return;
-    }
-    
-    _data = [NSMutableArray arrayWithArray:chartData];
-}
-
-@end
-
 
 @interface FSLineChart ()
 @property (nonatomic, strong) NSMutableArray* plots;
 @property (nonatomic, strong) NSMutableArray* layers;
 
-@property (nonatomic) CGFloat min;
-@property (nonatomic) CGFloat max;
 @property (nonatomic) CGMutablePathRef initialPath;
 @property (nonatomic) CGMutablePathRef newPath;
 
@@ -117,6 +65,8 @@
 {
     _layers = [NSMutableArray array];
     _plots = [NSMutableArray array];
+    _max = 1;
+    _min = 0;
     self.backgroundColor = [UIColor whiteColor];
     [self setDefaultParameters];
 }
@@ -179,7 +129,11 @@
         return;
     }
     
-    [self computeBounds];
+    if (self.automaticallyAdjustBounds) {
+    
+        [self computeBounds];
+    }
+    
     
     // No data
     if(isnan(_max)) {
@@ -732,4 +686,6 @@
     
     return path;
 }
+
+
 @end
