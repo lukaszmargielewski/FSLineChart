@@ -26,12 +26,12 @@
 @interface FSLineChart : UIView
 
 // Block definition for getting a label for a set index (use case: date, units,...)
-typedef NSString *(^FSLabelForIndexGetter)(NSUInteger index);
+typedef NSString *(^FSLabelForXValueGetter)(CGFloat x);
 
 // Same as above, but for the value (for adding a currency, or a unit symbol for example)
-typedef NSString *(^FSLabelForValueGetter)(CGFloat value);
+typedef NSString *(^FSLabelForYValueGetter)(CGFloat value);
 // Same as above, but for the value (for adding a currency, or a unit symbol for example)
-typedef UIImage *(^FSIconForValueGetter)(CGFloat value);
+typedef UIImage *(^FSIconForYValueGetter)(CGFloat value);
 
 typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
     ValueLabelLeft,
@@ -39,15 +39,15 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
     ValueLabelLeftMirrored
 };
 
-// Index label properties
-@property (copy) FSLabelForIndexGetter labelForIndex;
+// X label properties
+@property (copy) FSLabelForXValueGetter labelForXValue;
 @property (nonatomic, strong) UIFont* indexLabelFont;
 @property (nonatomic) UIColor* indexLabelTextColor;
 @property (nonatomic) UIColor* indexLabelBackgroundColor;
 
-// Value label properties
-@property (copy) FSLabelForValueGetter  labelForValue;
-@property (copy) FSIconForValueGetter   iconForValue;
+// Y label properties
+@property (copy) FSLabelForYValueGetter  labelForYValue;
+@property (copy) FSIconForYValueGetter   iconForYValue;
 
 @property (nonatomic, strong) UIFont* valueLabelFont;
 @property (nonatomic) UIColor* valueLabelTextColor;
@@ -56,9 +56,8 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 @property (nonatomic) ValueLabelPositionType valueLabelPosition;
 
 // Number of visible step in the chart
-@property (nonatomic) int gridStep;
-@property (nonatomic) int verticalGridStep;
-@property (nonatomic) int horizontalGridStep;
+@property (nonatomic) CGFloat verticalGridStep;
+@property (nonatomic) CGFloat horizontalGridStep;
 
 // Margin of the chart
 @property (nonatomic) UIEdgeInsets margin;
@@ -83,10 +82,5 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 - (void)clearAllPlots;
 
 - (void)repositionPlots;
-
-// Get the bounds of the chart
-- (CGFloat)minVerticalBound;
-- (CGFloat)maxVerticalBound;
-
 
 @end
