@@ -26,12 +26,12 @@
 @interface FSLineChart : UIView
 
 // Block definition for getting a label for a set index (use case: date, units,...)
-typedef NSString *(^FSLabelForXValueGetter)(CGFloat x);
+typedef NSString *(^FSLabelForValueGetter)(CGFloat value);
+// Same as above, but for the value (for adding a currency, or a unit symbol for example)
+typedef UIImage *(^FSIconForValueGetter)(CGFloat value);
 
-// Same as above, but for the value (for adding a currency, or a unit symbol for example)
-typedef NSString *(^FSLabelForYValueGetter)(CGFloat value);
-// Same as above, but for the value (for adding a currency, or a unit symbol for example)
-typedef UIImage *(^FSIconForYValueGetter)(CGFloat value);
+// Block definition if something should be done for value.
+typedef BOOL (^FSValueFilter)(CGFloat value);
 
 typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
     ValueLabelLeft,
@@ -40,14 +40,19 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 };
 
 // X label properties
-@property (copy) FSLabelForXValueGetter labelForXValue;
+@property (copy) FSValueFilter          shouldDrawLabelForXValue;
+@property (copy) FSValueFilter          shouldDrawGridForXValue;
+@property (copy) FSLabelForValueGetter  labelForXValue;
+
 @property (nonatomic, strong) UIFont* indexLabelFont;
 @property (nonatomic) UIColor* indexLabelTextColor;
 @property (nonatomic) UIColor* indexLabelBackgroundColor;
 
 // Y label properties
-@property (copy) FSLabelForYValueGetter  labelForYValue;
-@property (copy) FSIconForYValueGetter   iconForYValue;
+@property (copy) FSValueFilter          shouldDrawLabelForYValue;
+@property (copy) FSValueFilter          shouldDrawGridForYValue;
+@property (copy) FSLabelForValueGetter  labelForYValue;
+@property (copy) FSIconForValueGetter   iconForYValue;
 
 @property (nonatomic, strong) UIFont* valueLabelFont;
 @property (nonatomic) UIColor* valueLabelTextColor;
