@@ -124,7 +124,7 @@
     
     [self recalculateAxisAndScales];
     [self layoutChartLayer];
-    [self repositionPlots];
+    [self reloadPlots];
     
     [super layoutSubviews];
 }
@@ -156,7 +156,7 @@
 {
 
     [self.plots removeAllObjects];
-    [self repositionPlots];
+    [self reloadPlots];
 }
 
 - (void)recalculateAxisAndScales{
@@ -179,7 +179,7 @@
 
     self.graphLayer.frame = _graphFrame;
 }
-- (void)repositionPlots
+- (void)reloadPlots
 {
     
     [self clearChartData];

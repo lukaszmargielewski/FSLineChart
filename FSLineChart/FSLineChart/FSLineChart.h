@@ -80,12 +80,8 @@ typedef NS_ENUM(NSInteger, ValueLabelPositionType) {
 // Animations
 @property (nonatomic) CGFloat animationDuration;
 
-// Set the actual data for the chart, and then render it to the view.
 - (void)addPlot:(FSLinePlot *)plot;
-
-// Clear all rendered data from the view.
 - (void)clearAllPlots;
-
-- (void)repositionPlots;
+- (void)reloadPlots;
 
 @end
