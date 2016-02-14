@@ -435,6 +435,10 @@
     for (FSLinePlot *plot in self.plots) {
         
         FSPointData *data       = plot.data;
+        
+        if (plot.data.count < 1) {
+            continue;
+        }
         CGFloat     tension     = plot.bezierSmoothingTension;
         BOOL        smoothing   = plot.bezierSmoothing;
         
