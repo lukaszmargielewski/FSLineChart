@@ -37,6 +37,7 @@
     _bezierSmoothing = YES;
     _bezierSmoothingTension = 0.2;
     _lineWidth = 1;
+    _dataPointLineWidth = 1;
     _displayDataPoint = NO;
     _dataPointRadius = 1;
     _dataPointColor = _color;

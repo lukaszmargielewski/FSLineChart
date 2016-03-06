@@ -22,7 +22,7 @@
 @property (nonatomic, strong) UIColor* dataPointColor;
 @property (nonatomic, strong) UIColor* dataPointBackgroundColor;
 @property (nonatomic) CGFloat dataPointRadius;
-
+@property (nonatomic) CGFloat dataPointLineWidth;
 // Smoothing
 @property (nonatomic) BOOL bezierSmoothing;
 @property (nonatomic) CGFloat bezierSmoothingTension;

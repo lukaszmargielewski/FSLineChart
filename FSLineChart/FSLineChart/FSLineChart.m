@@ -524,7 +524,7 @@
         fillLayer.path = circle.CGPath;
         fillLayer.strokeColor = plot.dataPointColor.CGColor;
         fillLayer.fillColor = plot.dataPointBackgroundColor.CGColor;
-        fillLayer.lineWidth = 1;
+        fillLayer.lineWidth = plot.dataPointLineWidth;
         fillLayer.lineJoin = kCALineJoinRound;
         
         [self.graphLayer addSublayer:fillLayer];
